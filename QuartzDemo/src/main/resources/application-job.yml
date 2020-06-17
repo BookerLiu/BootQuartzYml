@@ -1,0 +1,29 @@
+#通过加载此配置文件实现动态创建Job 旨在通过一种更灵活便捷的方式来控制定时任务
+#20200611 by Demo-Liu
+#jobs:
+#  jobList:
+#    - jobConf:
+#        name: 测试任务                             #任务名 可选
+#        job: org.jeecg.modules.quartz.job.DemoJob  #任务类包路径 必须
+#        param:                                     #可为job类注入参数(可配置多项)   可选
+#          jtbs: test
+#        cron: 10 * * * * ?                         #任务执行频率 必须
+#        active: true                               #任务激活状态 必须
+jobs:
+  jobList:
+    - jobConf:
+        name: 测试任务
+        job: com.example.demo.quartz.DemoJob
+        param:
+          jtbs: test
+          ss: test2
+        cron: 0/10 * * * * ?
+        active: true
+    - jobConf:
+        name: 测试任务2
+        job: com.example.demo.quartz.DemoJob2
+        param:
+          jtbs: test
+          ss: test2
+        cron: 0/10 * * * * ?
+        active: false
