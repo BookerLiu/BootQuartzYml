@@ -17,18 +17,17 @@ import java.util.Map;
  * @description 配置定时任务
  */
 @Configuration
-@ConfigurationProperties(prefix = "jobs")
+@ConfigurationProperties
 public class SchedulerConfig implements CommandLineRunner,SchedulerFactoryBeanCustomizer {
 
     @Autowired
     private Scheduler scheduler;
 
-    private final String JOB_CONF = "jobConf";
-    private final String JOB_CLASS = "job";
-    private final String JOB_NAME = "name";
-    private final String JOB_PARAM = "param";
-    private final String JOB_ACTIVE = "active";
-    private final String JOB_CRON = "cron";
+    private final static String JOB_NAME = "name";
+    private final static String JOB_CLASS = "job";
+    private final static String JOB_PARAM = "param";
+    private final static String JOB_ACTIVE = "active";
+    private final static String JOB_CRON = "cron";;
 
     private List<Map<String,Object>> jobList;
 
@@ -41,6 +40,12 @@ public class SchedulerConfig implements CommandLineRunner,SchedulerFactoryBeanCu
      */
     @Override
     public void run(String... args) throws Exception {
+
+        if(jobList == null){
+//            log.info("没有配置计划任务...");
+            return;
+        }
+
         //配置文件信息
         Class job;
         JobDataMap jdm = new JobDataMap();
@@ -50,17 +55,14 @@ public class SchedulerConfig implements CommandLineRunner,SchedulerFactoryBeanCu
         Trigger trigger;
         //清除原有任务
         scheduler.clear();
-
-        Map<String,Object> mapConf;
         for (Map<String, Object> map : jobList) {
-            mapConf = (Map<String, Object>) map.get(JOB_CONF);
-            active = Boolean.parseBoolean(mapConf.get(JOB_ACTIVE).toString());
-            jobName = mapConf.get(JOB_NAME) == null ? "" : mapConf.get(JOB_NAME).toString();
-            job = Class.forName(mapConf.get(JOB_CLASS).toString());
+            active = Boolean.parseBoolean(map.get(JOB_ACTIVE).toString());
+            jobName = map.get(JOB_NAME) == null ? "" : map.get(JOB_NAME).toString();
+            job = Class.forName(map.get(JOB_CLASS).toString());
             if (active) {
-                if(mapConf.get(JOB_PARAM) != null){
+                if(map.get(JOB_PARAM) != null){
                     //设置任务类属性
-                    jdm.putAll((Map<String, String>)mapConf.get(JOB_PARAM));
+                    jdm.putAll((Map<String, String>)map.get(JOB_PARAM));
                 }
 
                 // 构建job信息
@@ -71,7 +73,7 @@ public class SchedulerConfig implements CommandLineRunner,SchedulerFactoryBeanCu
                         .usingJobData(jdm)
                         .build();
                 // 表达式
-                cron =  mapConf.get(JOB_CRON).toString();
+                cron =  map.get(JOB_CRON).toString();
                 // 按新的cronExpression表达式构建一个新的trigger
                 trigger = TriggerBuilder
                         .newTrigger()
@@ -81,9 +83,9 @@ public class SchedulerConfig implements CommandLineRunner,SchedulerFactoryBeanCu
                         .build();
                 //注册任务
                 scheduler.scheduleJob(jobDetail, trigger);
-                //log.info("{}({})任务注册成功...",jobName,job.getName());
+//                log.info("{}({})任务注册成功...",jobName,job.getName());
             }else{
-                //log.info("{}({})任务未开启...",jobName,job.getName());
+//                log.info("{}({})任务未开启...",jobName,job.getName());
             }
         }
         // 启动调度器
